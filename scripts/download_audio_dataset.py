@@ -29,10 +29,11 @@ def download_audio(link, output_path):
         'format': 'bestaudio/best',
         'outtmpl': output_path,
         'quiet': False,
+        'ffmpeg_location': 'C:/Users/psene/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-7.1.1-full_build/bin',
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'wav',
-            'preferredquality': '192',
+            'preferredquality': '0',
         }],
     }
     try:
