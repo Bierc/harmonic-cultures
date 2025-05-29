@@ -5,7 +5,7 @@ import pandas as pd
 
 RAW_DIR = "data/raw"
 OUTPUT_CSV = "data/features_audio.csv"
-DURATION = 60  # segundos
+DURATION = 200  # segundos
 
 def extract_features(file_path):
     try:
