@@ -10,10 +10,10 @@ def download_audio(link, output_name, output_dir="data/raw"):
         'format': 'bestaudio/best',
         'outtmpl': output_path,
         'quiet': False,
-        'ffmpeg_location': 'C:/Users/psene/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-7.1.1-full_build/bin',
+        'ffmpeg_location': '/usr/bin/ffmpeg',
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'wav',
+            'preferredcodec': 'mp3',
             'preferredquality': '0',
         }],
     }
