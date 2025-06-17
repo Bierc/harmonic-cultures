@@ -2,90 +2,92 @@ import os
 import librosa
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
-BASE_DIR = "data/raw_subsets"
-OUTPUT_CSV = "data/features_audio.csv"
-DURATION = 60  # segundos
+# Diretórios
+RAW_DIR = "data/raw_subsets"
+OUTPUT_CSV = "data/features_audio_subset_new.csv"
+DURATION = 200  # segundos
 
-def extract_features(file_path):
+def extract_features_from_hpss(file_path, duration=200, sr=22050):
     try:
-        y, sr = librosa.load(file_path, sr=22050)
-        if len(y) > DURATION * sr:
-            y = y[:DURATION * sr]  # corta se exceder DURATION
+        y, sr = librosa.load(file_path, sr=sr)
+        if len(y) > duration * sr:
+            y = y[:duration * sr]
+
+        # Separação harmônico/percussivo
+        y_harm, y_perc = librosa.effects.hpss(y)
+
+        # Features globais
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
+        centroid = librosa.feature.spectral_centroid(y=y, sr=sr)
+        rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
+        bandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr)
+
+        # Harmônicas
+        chroma = librosa.feature.chroma_stft(y=y_harm, sr=sr)
+        tonnetz = librosa.feature.tonnetz(y=y_harm, sr=sr)
+
+        # Percussivas
+        zcr = librosa.feature.zero_crossing_rate(y=y_perc)
+        flatness = librosa.feature.spectral_flatness(y=y_perc)
+        rms = librosa.feature.rms(y=y_perc)
 
         features = {
             "filename": os.path.basename(file_path),
             "style": os.path.basename(os.path.dirname(file_path)),
-            "track_id": os.path.splitext(os.path.basename(file_path))[0],
 
-            "mfcc_mean": np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13), axis=1).tolist(),
-            "mfcc_std": np.std(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13), axis=1).tolist(),
+            # MFCCs
+            **{f"mfcc{i+1}_mean": np.mean(mfcc[i]) for i in range(13)},
+            **{f"mfcc{i+1}_std": np.std(mfcc[i]) for i in range(13)},
 
-            "centroid_mean": np.mean(librosa.feature.spectral_centroid(y=y, sr=sr)),
-            "centroid_std": np.std(librosa.feature.spectral_centroid(y=y, sr=sr)),
+            # Global
+            "centroid_mean": np.mean(centroid),
+            "centroid_std": np.std(centroid),
+            "rolloff_mean": np.mean(rolloff),
+            "rolloff_std": np.std(rolloff),
+            "bandwidth_mean": np.mean(bandwidth),
+            "bandwidth_std": np.std(bandwidth),
 
-            "rolloff_mean": np.mean(librosa.feature.spectral_rolloff(y=y, sr=sr)),
-            "rolloff_std": np.std(librosa.feature.spectral_rolloff(y=y, sr=sr)),
+            # Harmonic
+            **{f"harmonic_chroma{i+1}_mean": np.mean(chroma[i]) for i in range(chroma.shape[0])},
+            **{f"harmonic_chroma{i+1}_std": np.std(chroma[i]) for i in range(chroma.shape[0])},
+            **{f"harmonic_tonnetz{i+1}_mean": np.mean(tonnetz[i]) for i in range(tonnetz.shape[0])},
+            **{f"harmonic_tonnetz{i+1}_std": np.std(tonnetz[i]) for i in range(tonnetz.shape[0])},
 
-            "zcr_mean": np.mean(librosa.feature.zero_crossing_rate(y)),
-            "zcr_std": np.std(librosa.feature.zero_crossing_rate(y)),
+            # Percussive
+            "percussive_zcr_mean": np.mean(zcr),
+            "percussive_zcr_std": np.std(zcr),
+            "percussive_flatness_mean": np.mean(flatness),
+            "percussive_flatness_std": np.std(flatness),
+            "percussive_rms_mean": np.mean(rms),
+            "percussive_rms_std": np.std(rms),
 
-            "flatness_mean": np.mean(librosa.feature.spectral_flatness(y=y)),
-            "flatness_std": np.std(librosa.feature.spectral_flatness(y=y)),
-
-            "chroma_stft_mean": np.mean(librosa.feature.chroma_stft(y=y, sr=sr), axis=1).tolist(),
-            "chroma_stft_std": np.std(librosa.feature.chroma_stft(y=y, sr=sr), axis=1).tolist(),
-
-            "tonnetz_mean": np.mean(librosa.feature.tonnetz(y=librosa.effects.harmonic(y), sr=sr), axis=1).tolist(),
-            "tonnetz_std": np.std(librosa.feature.tonnetz(y=librosa.effects.harmonic(y), sr=sr), axis=1).tolist(),
-
-            "bandwidth_mean": np.mean(librosa.feature.spectral_bandwidth(y=y, sr=sr)),
-            "bandwidth_std": np.std(librosa.feature.spectral_bandwidth(y=y, sr=sr)),
-
-            "rms_mean": np.mean(librosa.feature.rms(y=y)),
-            "rms_std": np.std(librosa.feature.rms(y=y)),
         }
 
         return features
+
     except Exception as e:
-        print(f"⚠️ Erro ao processar {file_path}: {e}")
+        print(f"Erro ao processar {file_path}: {e}")
         return None
 
+# Loop principal
 def main():
     feature_rows = []
-    for style_folder in os.listdir(BASE_DIR):
-        subdir = os.path.join(BASE_DIR, style_folder)
-        if not os.path.isdir(subdir):
+    for style_dir in os.listdir(RAW_DIR):
+        full_dir = os.path.join(RAW_DIR, style_dir)
+        if not os.path.isdir(full_dir):
             continue
-        for filename in os.listdir(subdir):
+        for filename in tqdm(os.listdir(full_dir), desc=f"Processando {style_dir}"):
             if filename.endswith(".wav"):
-                path = os.path.join(subdir, filename)
-                print(f"🎧 Processando: {path}")
-                feats = extract_features(path)
+                path = os.path.join(full_dir, filename)
+                feats = extract_features_from_hpss(path)
                 if feats:
                     feature_rows.append(feats)
 
     df = pd.DataFrame(feature_rows)
-
-    # Expandir colunas de lista (MFCC, chroma, etc.)
-    if "mfcc_mean" in df.columns:
-        mfcc_means = pd.DataFrame(df["mfcc_mean"].tolist(), columns=[f"mfcc{i+1}_mean" for i in range(13)])
-        mfcc_stds = pd.DataFrame(df["mfcc_std"].tolist(), columns=[f"mfcc{i+1}_std" for i in range(13)])
-        df = pd.concat([df.drop(["mfcc_mean", "mfcc_std"], axis=1), mfcc_means, mfcc_stds], axis=1)
-
-    if "chroma_stft_mean" in df.columns:
-        chroma_means = pd.DataFrame(df["chroma_stft_mean"].tolist(), columns=[f"chroma{i+1}_mean" for i in range(12)])
-        chroma_stds = pd.DataFrame(df["chroma_stft_std"].tolist(), columns=[f"chroma{i+1}_std" for i in range(12)])
-        df = pd.concat([df.drop(["chroma_stft_mean", "chroma_stft_std"], axis=1), chroma_means, chroma_stds], axis=1)
-
-    if "tonnetz_mean" in df.columns:
-        tonnetz_means = pd.DataFrame(df["tonnetz_mean"].tolist(), columns=[f"tonnetz{i+1}_mean" for i in range(6)])
-        tonnetz_stds = pd.DataFrame(df["tonnetz_std"].tolist(), columns=[f"tonnetz{i+1}_std" for i in range(6)])
-        df = pd.concat([df.drop(["tonnetz_mean", "tonnetz_std"], axis=1), tonnetz_means, tonnetz_stds], axis=1)
-
-    os.makedirs("data", exist_ok=True)
+    os.makedirs(os.path.dirname(OUTPUT_CSV), exist_ok=True)
     df.to_csv(OUTPUT_CSV, index=False)
     print(f"✅ Features salvas em: {OUTPUT_CSV}")
 
-if __name__ == "__main__":
-    main()
+main()
