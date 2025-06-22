@@ -3,11 +3,11 @@
 A cross-cultural exploration of musical timbre using spectral analysis and dimensionality reduction techniques.  
 This project maps and visualizes how songs from different regions relate in timbre space.
 
-## 🎯 Objective
+## Objective
 
 To investigate whether music from different countries or cultures forms distinct clusters in a computational timbre space, and whether acoustic similarity reflects cultural or stylistic proximity.
 
-## ⚙️ Technologies Used
+## Technologies Used
 
 - Python 3
 - Librosa
@@ -16,23 +16,19 @@ To investigate whether music from different countries or cultures forms distinct
 - Plotly / Seaborn
 - UMAP / t-SNE / PCA
 
-## 📊 Dataset Overview
+## Dataset Overview
 
 This project uses a custom-curated dataset of **120 songs** from **6 different regions**, each representing a variety of musical cultures through distinct genres and artists.
 
-### 🌍 Countries and Styles
+### Countries and Styles
 
-The dataset includes **4 musical styles per country**, with **5 representative songs** per style:
+We manually curated a dataset of **90 songs** from **3 stylistically similar genres**:
 
-| Country         | Styles                                           | Tracks |
-|------------------|--------------------------------------------------|--------|
-| **Brazil**       | Samba, Bossa Nova, Funk Carioca, Chorinho       | 20     |
-| **India**        | Bollywood, Classical, Bhajan, Folk              | 20     |
-| **Japan**        | City Pop, J-Pop, Min’yō, Enka                   | 20     |
-| **USA**          | Blues, Jazz, Soul, Folk                         | 20     |
-| **West Africa**  | Afrobeat, Highlife, Juju, Mbalax                | 20     |
-| **Middle East**  | Maqam, Dabke, Arabic Pop, Traditional           | 20     |
-
+| Style     | Country        | Tracks |
+|-----------|----------------|--------|
+| Samba     | Brazil         | 30     |
+| Jazz      | USA            | 30     |
+| Afrobeat  | West Africa    | 30     |
 **Total:** `120 tracks`, covering `24 genres` from traditional, classical, and folk to modern pop and soul.
 
 ### 🗂 Dataset Columns
@@ -49,7 +45,7 @@ The dataset includes **4 musical styles per country**, with **5 representative s
 | `license`     | Assumed license (default: Fair use; can be adjusted if needed) |
 | `notes`       | Additional comments (optional)                                 |
 
-### 🧩 Purpose
+### Purpose
 
 This dataset serves as the foundation for building **timbre-based representations of music**, allowing analysis of acoustic similarity across styles, countries, and cultural backgrounds. It supports experiments in clustering, dimensionality reduction, and timbre space visualization.
 
@@ -63,13 +59,23 @@ This dataset serves as the foundation for building **timbre-based representation
 ├── results/ # Outputs like plots, embeddings, and metrics 
 └── README.md
 ```
-## 🔍 Methods
+### Feature Extraction
 
-1. Feature extraction using mel spectrograms and low-level spectral descriptors.
-2. Vector representation of each audio track using statistical aggregation.
-3. Dimensionality reduction to project high-dimensional timbre features into 2D.
-4. Visualization and analysis of clusters by region, style, and cultural influence.
+We extracted a total of **74 features** per song, including:
 
-## 📌 Status
+- **Global descriptors:** MFCCs, spectral centroid, roll-off, and bandwidth  
+- **Harmonic features:** Chroma and tonnetz descriptors (from HPSS harmonic component)  
+- **Percussive features:** ZCR, spectral flatness, and RMS energy (from HPSS percussive component)
 
-Project under active development — data collection and initial feature extraction in progress.
+All features were aggregated using mean and standard deviation.
+
+
+## Methods
+
+1. **Feature Extraction:** Using Librosa + HPSS separation to isolate harmonic/percussive content.
+2. **Normalization:** Z-score standardization for all feature vectors.
+3. **Dimensionality Reduction:** PCA, t-SNE, and UMAP for projecting features into 2D space.
+4. **Clustering:** KMeans and HDBSCAN were used to detect structure within the projected space.
+5. **Evaluation:** Clusters and embeddings were evaluated using Silhouette Score, Calinski-Harabasz, and Davies-Bouldin indices.
+6. **Qualitative Analysis:** Observational analysis was conducted to compare the projections with perceptual expectations.
+
