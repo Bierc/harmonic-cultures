@@ -1,5 +1,4 @@
-# TimbreSpace
-
+# Exploring Timbre Spaces through Dimensionality Reduction and Clustering
 A cross-cultural exploration of musical timbre using spectral analysis and dimensionality reduction techniques.  
 This project maps and visualizes how songs from different regions relate in timbre space.
 
