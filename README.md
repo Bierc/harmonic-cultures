@@ -29,7 +29,6 @@ We manually curated a dataset of **90 songs** from **3 stylistically similar gen
 | Samba     | Brazil         | 30     |
 | Jazz      | USA            | 30     |
 | Afrobeat  | West Africa    | 30     |
-**Total:** `120 tracks`, covering `24 genres` from traditional, classical, and folk to modern pop and soul.
 
 ### 🗂 Dataset Columns
 
