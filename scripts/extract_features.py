@@ -4,10 +4,10 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-# Diretórios
+# directories
 RAW_DIR = "data/raw_subsets"
 OUTPUT_CSV = "data/features_audio_subset_new.csv"
-DURATION = 200  # segundos
+DURATION = 200  # seconds
 
 def extract_features_from_hpss(file_path, duration=200, sr=22050):
     try:
@@ -15,20 +15,20 @@ def extract_features_from_hpss(file_path, duration=200, sr=22050):
         if len(y) > duration * sr:
             y = y[:duration * sr]
 
-        # Separação harmônico/percussivo
+        # harmonic-percussive source separation
         y_harm, y_perc = librosa.effects.hpss(y)
 
-        # Features globais
+        # global features
         mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
         centroid = librosa.feature.spectral_centroid(y=y, sr=sr)
         rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
         bandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr)
 
-        # Harmônicas
+        # harmonic features
         chroma = librosa.feature.chroma_stft(y=y_harm, sr=sr)
         tonnetz = librosa.feature.tonnetz(y=y_harm, sr=sr)
 
-        # Percussivas
+        # percussive features
         zcr = librosa.feature.zero_crossing_rate(y=y_perc)
         flatness = librosa.feature.spectral_flatness(y=y_perc)
         rms = librosa.feature.rms(y=y_perc)
@@ -71,7 +71,6 @@ def extract_features_from_hpss(file_path, duration=200, sr=22050):
         print(f"Erro ao processar {file_path}: {e}")
         return None
 
-# Loop principal
 def main():
     feature_rows = []
     for style_dir in os.listdir(RAW_DIR):
